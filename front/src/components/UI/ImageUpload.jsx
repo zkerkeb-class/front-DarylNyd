@@ -67,32 +67,24 @@ const ImageUpload = ({ onImageSelect, analysisType, onAnalysisTypeChange, isAnal
             {/* Analysis Type Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {analysisTypes.map((type) => (
-                    <div
+                    <button
                         key={type.id}
-                        className={`relative flex items-center p-4 rounded-lg border cursor-pointer transition-colors
-                            ${analysisType === type.id
-                                ? 'border-primary-600 bg-primary-50'
-                                : 'border-gray-200 hover:border-gray-300'}`}
                         onClick={() => onAnalysisTypeChange(type.id)}
+                        className={`relative flex flex-col items-center p-4 rounded-lg border-2 transition-all duration-200
+                            ${analysisType === type.id
+                                ? 'border-primary-coral bg-primary-coral/10 text-primary-coral'
+                                : 'border-gray-200 hover:border-primary-coral/50 hover:bg-primary-coral/5'}`}
                     >
-                        <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between">
-                                <p className={`text-sm font-medium ${analysisType === type.id ? 'text-primary-900' : 'text-gray-900'}`}>
-                                    {type.label}
-                                </p>
-                                <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${analysisType === type.id
-                                    ? 'border-primary-600 bg-primary-600'
-                                    : 'border-gray-300'}`}>
-                                    {analysisType === type.id && (
-                                        <div className="h-2 w-2 rounded-full bg-white" />
-                                    )}
-                                </div>
+                        <span className="font-medium text-sm">{type.label}</span>
+                        <span className="text-xs text-gray-500 mt-1">{type.description}</span>
+                        {analysisType === type.id && (
+                            <div className="absolute top-2 right-2">
+                                <svg className="w-4 h-4 text-primary-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                </svg>
                             </div>
-                            <p className={`mt-1 text-xs ${analysisType === type.id ? 'text-primary-700' : 'text-gray-500'}`}>
-                                {type.description}
-                            </p>
-                        </div>
-                    </div>
+                        )}
+                    </button>
                 ))}
             </div>
 
@@ -102,7 +94,7 @@ const ImageUpload = ({ onImageSelect, analysisType, onAnalysisTypeChange, isAnal
                     {...(!isAnalyzed ? getRootProps() : {})}
                     className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors relative
                         ${isDragActive && !isAnalyzed ? 'border-primary-500 bg-primary-50' : 'border-gray-300'}
-                        ${preview ? 'bg-gray-50' : 'bg-white'}
+                        ${preview ? 'bg-background-alt' : 'bg-background'}
                         ${isAnalyzed ? 'cursor-default' : 'cursor-pointer hover:border-gray-400'}`}
                 >
                     {!isAnalyzed && <input {...getInputProps()} />}

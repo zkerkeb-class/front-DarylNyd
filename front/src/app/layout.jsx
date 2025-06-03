@@ -1,8 +1,22 @@
-import { Inter } from 'next/font/google';
+import { Fredoka, Yeseva_One } from 'next/font/google';
 import { AuthProvider } from '@/hooks/useAuth';
-import '@/styles/globals.css';
+import { ThemeProvider } from '@/context/ThemeContext';
+import ClientLayout from '@/components/layout/ClientLayout';
+import './globals.css';
 
-const inter = Inter({ subsets: ['latin'] });
+const fredoka = Fredoka({
+    weight: ['400', '500', '600', '700'],
+    subsets: ['latin'],
+    variable: '--font-fredoka',
+    display: 'swap',
+});
+
+const yeseva = Yeseva_One({
+    weight: '400',
+    subsets: ['latin'],
+    variable: '--font-yeseva',
+    display: 'swap',
+});
 
 export const metadata = {
     title: 'NydArt Advisor',
@@ -11,11 +25,15 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
     return (
-        <html lang="en">
-            <body className={inter.className}>
-                <AuthProvider>
-                    {children}
-                </AuthProvider>
+        <html lang="en" suppressHydrationWarning>
+            <body className={`${fredoka.variable} ${yeseva.variable}`}>
+                <ThemeProvider>
+                    <AuthProvider>
+                        <ClientLayout>
+                            {children}
+                        </ClientLayout>
+                    </AuthProvider>
+                </ThemeProvider>
             </body>
         </html>
     );

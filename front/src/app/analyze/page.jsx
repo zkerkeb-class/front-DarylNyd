@@ -226,21 +226,21 @@ export default function AnalyzePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen py-8">
             <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-3 space-y-6">
-                        <h1 className="text-2xl font-semibold text-gray-900">
+                        <h1 className="text-2xl font-semibold text-text">
                             AI Artwork Analysis
                         </h1>
 
                         {/* Free Trial Notice */}
-                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
-                            <h2 className="text-lg font-medium text-blue-900 mb-1">
+                        <div className="bg-primary-coral/10 border border-primary-coral/20 rounded-lg p-4">
+                            <h2 className="text-lg font-medium text-text mb-1">
                                 Free Trial
                             </h2>
-                            <p className="text-sm text-blue-700">
+                            <p className="text-sm text-text/70">
                                 You can analyze artworks without an account, but registered users get 5 free analyses per month plus subscription options for unlimited access.
                             </p>
                         </div>
@@ -248,7 +248,7 @@ export default function AnalyzePage() {
                         {/* Analysis Type Selection */}
                         <AnimatePresence mode="wait">
                             <div>
-                                <h2 className="text-base font-medium text-gray-900 mb-4">
+                                <h2 className="text-base font-medium text-text mb-4">
                                     What kind of feedback would you like?
                                 </h2>
                                 <ImageUpload
@@ -271,8 +271,8 @@ export default function AnalyzePage() {
                                     disabled={isAnalyzing}
                                     className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 flex items-center justify-center space-x-2
                                         ${isAnalyzing
-                                            ? 'bg-primary-400 cursor-not-allowed opacity-75'
-                                            : 'bg-primary-600 hover:bg-primary-700 hover:shadow-lg transform hover:-translate-y-0.5'} 
+                                            ? 'bg-primary-coral/75 cursor-not-allowed'
+                                            : 'bg-primary-coral hover:bg-primary-salmon hover:shadow-lg transform hover:-translate-y-0.5'} 
                                         text-white relative overflow-hidden`}
                                 >
                                     <span className={`flex items-center transition-all duration-200 ${isAnalyzing ? 'opacity-0' : 'opacity-100'}`}>
@@ -301,15 +301,15 @@ export default function AnalyzePage() {
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="bg-primary-50 border border-primary-100 rounded-lg p-4"
+                                    className="bg-primary-coral/10 border border-primary-coral/20 rounded-lg p-4"
                                 >
                                     <div className="flex items-center justify-center space-x-3">
                                         <div className="flex items-center space-x-2">
-                                            <div className="animate-pulse h-2 w-2 rounded-full bg-primary-600"></div>
-                                            <div className="animate-pulse h-2 w-2 rounded-full bg-primary-600" style={{ animationDelay: '0.2s' }}></div>
-                                            <div className="animate-pulse h-2 w-2 rounded-full bg-primary-600" style={{ animationDelay: '0.4s' }}></div>
+                                            <div className="animate-pulse h-2 w-2 rounded-full bg-primary-coral"></div>
+                                            <div className="animate-pulse h-2 w-2 rounded-full bg-primary-coral" style={{ animationDelay: '0.2s' }}></div>
+                                            <div className="animate-pulse h-2 w-2 rounded-full bg-primary-coral" style={{ animationDelay: '0.4s' }}></div>
                                         </div>
-                                        <span className="text-sm font-medium text-primary-700">
+                                        <span className="text-sm font-medium text-text">
                                             AI is analyzing your artwork...
                                         </span>
                                     </div>
@@ -327,18 +327,18 @@ export default function AnalyzePage() {
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="bg-red-50 border border-red-200 rounded-lg p-4"
+                                className="bg-red-500/10 border border-red-500/20 rounded-lg p-4"
                             >
                                 <div className="flex items-center">
                                     <svg className="h-5 w-5 text-red-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                                     </svg>
                                     <div>
-                                        <p className="text-sm font-medium text-red-800">
+                                        <p className="text-sm font-medium text-red-400">
                                             {error}
                                         </p>
                                         {error.includes('Cannot connect to backend server') && (
-                                            <p className="text-xs text-red-600 mt-1">
+                                            <p className="text-xs text-red-300 mt-1">
                                                 Please make sure the backend server is running with: npm run dev
                                             </p>
                                         )}
@@ -362,8 +362,8 @@ export default function AnalyzePage() {
 
                     {/* Recent Analyses Sidebar */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-lg font-medium text-gray-900 mb-4">
+                        <div className="bg-background rounded-lg shadow-md border border-text/10 p-6">
+                            <h2 className="text-lg font-medium text-text mb-4">
                                 Recent Analyses
                             </h2>
                             {recentAnalyses.length > 0 ? (
@@ -373,7 +373,7 @@ export default function AnalyzePage() {
                                             key={analysis.id}
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
-                                            className="bg-gray-50 rounded-lg p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                                            className="bg-background-alt rounded-lg p-4 cursor-pointer hover:bg-background-hover transition-colors border border-text/5"
                                             onClick={() => handleViewPreviousAnalysis(analysis)}
                                         >
                                             <div className="flex items-center space-x-4">
@@ -385,10 +385,10 @@ export default function AnalyzePage() {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-medium text-gray-900">
+                                                    <p className="text-sm font-medium text-text">
                                                         {analysis.type} Analysis
                                                     </p>
-                                                    <p className="text-xs text-gray-500">
+                                                    <p className="text-xs text-text/60">
                                                         {analysis.timestamp}
                                                     </p>
                                                 </div>
@@ -397,7 +397,7 @@ export default function AnalyzePage() {
                                     ))}
                                 </div>
                             ) : (
-                                <p className="text-sm text-gray-500">
+                                <p className="text-sm text-text/60">
                                     No analyses yet. Upload an artwork to get started!
                                 </p>
                             )}

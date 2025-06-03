@@ -3,15 +3,18 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { FcGoogle } from 'react-icons/fc';
-import { FaPalette } from 'react-icons/fa';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import ThemeButton from '@/components/ui/ThemeButton';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/context/ThemeContext';
 
 const RegisterForm = () => {
     const router = useRouter();
     const { register } = useAuth();
+    const { isDarkMode } = useTheme();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
@@ -68,14 +71,22 @@ const RegisterForm = () => {
 
     return (
         <div className="w-full max-w-md min-h-[600px] flex flex-col">
-            {/* Logo */}
-            <div className="flex items-center mb-8">
-                <FaPalette className="text-4xl text-black" />
-                <span className="ml-2 text-2xl font-bold">NYDART</span>
+            {/* Logo and Theme Toggle */}
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center">
+                    <Image
+                        src={isDarkMode ? '/Logo/Long_logo_dark.svg' : '/Logo/Long_logo_light.svg'}
+                        alt="NYDART Logo"
+                        width={120}
+                        height={40}
+                        className="h-8 w-auto"
+                    />
+                </div>
+                <ThemeButton />
             </div>
 
-            <h1 className="text-3xl font-bold mb-2">Welcome NYDART</h1>
-            <p className="text-gray-600 mb-8">Welcome to NydArt dashboard Community</p>
+            <h1 className="text-3xl font-bold mb-2 text-text">Welcome NYDART</h1>
+            <p className="text-text/60 mb-8">Welcome to NydArt dashboard Community</p>
 
             {error && (
                 <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
@@ -86,18 +97,18 @@ const RegisterForm = () => {
             {/* Google Sign In Button */}
             <button
                 onClick={handleGoogleSignIn}
-                className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-3 mb-6 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-center gap-2 bg-background border border-text/10 rounded-lg p-3 mb-6 hover:bg-text/5 transition-colors"
             >
                 <FcGoogle className="text-2xl" />
-                Continue With Google
+                <span className="text-text">Continue With Google</span>
             </button>
 
             <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-300" />
+                    <div className="w-full border-t border-text/10" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                    <span className="px-2 bg-white text-gray-500">Or</span>
+                    <span className="px-2 bg-background text-text/60">Or</span>
                 </div>
             </div>
 
@@ -146,9 +157,9 @@ const RegisterForm = () => {
                     <input
                         type="checkbox"
                         id="remember"
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-text/10 bg-background text-primary-coral focus:ring-primary-coral"
                     />
-                    <label htmlFor="remember" className="ml-2 text-sm text-gray-600">
+                    <label htmlFor="remember" className="ml-2 text-sm text-text/60">
                         Remember Me
                     </label>
                 </div>
@@ -156,17 +167,17 @@ const RegisterForm = () => {
                 <div className="mt-auto">
                     <Button
                         type="submit"
-                        className="w-full bg-black hover:bg-gray-900"
+                        className="w-full bg-primary-coral hover:bg-primary-salmon text-white"
                         loading={loading}
                     >
                         Register
                     </Button>
 
-                    <p className="text-center text-sm text-gray-600 mt-6">
+                    <p className="text-center text-sm text-text/60 mt-6">
                         Already have an account?{' '}
                         <Link
                             href="/auth/login"
-                            className="text-black hover:underline font-medium"
+                            className="text-text hover:text-primary-coral transition-colors font-medium"
                         >
                             Log in
                         </Link>
