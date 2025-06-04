@@ -11,7 +11,26 @@ export const AuthProvider = ({ children }) => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        checkAuth();
+        const initAuth = async () => {
+            try {
+                // Check if we have a token
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    setLoading(false);
+                    return;
+                }
+
+                await checkAuth();
+            } catch (error) {
+                console.error('Auth initialization failed:', error);
+                // Clear invalid token
+                localStorage.removeItem('token');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initAuth();
     }, []);
 
     const checkAuth = async () => {
@@ -21,8 +40,10 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error('Auth check failed:', error);
             setUser(null);
-        } finally {
-            setLoading(false);
+            // Only throw if it's not a "No token" error
+            if (!error.message.includes('No authentication token found')) {
+                throw error;
+            }
         }
     };
 
@@ -55,8 +76,12 @@ export const AuthProvider = ({ children }) => {
             setError(null);
             await AuthService.logout();
             setUser(null);
+            localStorage.removeItem('token');
         } catch (error) {
             setError(error.message);
+            // Still clear user state even if logout fails
+            setUser(null);
+            localStorage.removeItem('token');
             throw error;
         }
     };
@@ -92,6 +117,10 @@ export const AuthProvider = ({ children }) => {
         resetPassword,
         isAuthenticated: !!user,
     };
+
+    if (loading) {
+        return null; // or a loading spinner
+    }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FcGoogle } from 'react-icons/fc';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import ThemeButton from '@/components/ui/ThemeButton';
@@ -22,6 +24,10 @@ const RegisterForm = () => {
         email: '',
         password: '',
         confirmPassword: '',
+        phone: {
+            number: '',
+            countryCode: ''
+        }
     });
 
     const handleChange = (e) => {
@@ -29,6 +35,16 @@ const RegisterForm = () => {
         setFormData(prev => ({
             ...prev,
             [name]: value
+        }));
+    };
+
+    const handlePhoneChange = (value, country) => {
+        setFormData(prev => ({
+            ...prev,
+            phone: {
+                number: value,
+                countryCode: country.countryCode.toUpperCase()
+            }
         }));
     };
 
@@ -132,6 +148,23 @@ const RegisterForm = () => {
                     required
                     placeholder="Enter your email"
                 />
+
+                {/* Phone Number Input */}
+                <div className="space-y-2">
+                    <label className="block text-sm font-medium text-text">
+                        Phone Number (Optional)
+                    </label>
+                    <PhoneInput
+                        country={'fr'}
+                        value={formData.phone.number}
+                        onChange={handlePhoneChange}
+                        containerClass="!w-full"
+                        inputClass="!w-full !h-11 !bg-background !text-text !border-text/10 !rounded-lg focus:!border-primary-coral focus:!ring-1 focus:!ring-primary-coral"
+                        buttonClass="!bg-background !border-text/10 !rounded-l-lg"
+                        dropdownClass="!bg-background !text-text"
+                        searchClass="!bg-background !text-text"
+                    />
+                </div>
 
                 <Input
                     label="Password"

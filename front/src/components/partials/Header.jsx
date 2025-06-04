@@ -1,20 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { FaUserCircle, FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars, FaTimes } from 'react-icons/fa';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/context/ThemeContext';
 import ThemeButton from '@/components/ui/ThemeButton';
 
+const UserAvatar = ({ username }) => {
+    const initial = username ? username[0].toUpperCase() : 'U';
+
+    return (
+        <div className="h-9 w-9 rounded-full bg-primary-coral text-white flex items-center justify-center text-lg font-semibold">
+            {initial}
+        </div>
+    );
+};
+
 const Header = () => {
     const router = useRouter();
-    const { user, logout } = useAuth();
+    const { user, logout, isAuthenticated } = useAuth();
     const { isDarkMode } = useTheme();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleLogout = async () => {
         try {
@@ -32,6 +47,11 @@ const Header = () => {
         { label: 'Advisor', href: '/analyze' },
         { label: 'About', href: '/about' },
     ];
+
+    // Prevent hydration mismatch
+    if (!mounted) {
+        return null;
+    }
 
     return (
         <header className="bg-background shadow-md transition-colors duration-200">
@@ -65,32 +85,35 @@ const Header = () => {
                     <div className="hidden md:flex items-center space-x-4">
                         <ThemeButton />
 
-                        {user ? (
+                        {isAuthenticated ? (
                             <div className="relative">
                                 <button
                                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                                    className="flex items-center space-x-2 text-text hover:text-primary-coral"
+                                    className="flex items-center space-x-3 text-text hover:text-primary-coral focus:outline-none"
                                 >
-                                    <FaUserCircle className="h-6 w-6" />
-                                    <span className="font-primary">{user.username}</span>
+                                    <UserAvatar username={user?.username} />
                                 </button>
                                 {isUserMenuOpen && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-background rounded-md shadow-lg py-1">
+                                    <div className="absolute right-0 mt-2 w-48 bg-background rounded-lg shadow-lg py-1 border border-text/10">
+                                        <div className="px-4 py-2 border-b border-text/10">
+                                            <p className="text-sm font-medium text-text">{user?.username}</p>
+                                            <p className="text-xs text-text/60 truncate">{user?.email}</p>
+                                        </div>
                                         <Link
                                             href="/profile"
-                                            className="block px-4 py-2 text-sm text-text hover:bg-primary-coral hover:text-white font-primary"
+                                            className="block px-4 py-2 text-sm text-text hover:bg-background-alt font-primary"
                                         >
                                             Profile
                                         </Link>
                                         <Link
                                             href="/settings"
-                                            className="block px-4 py-2 text-sm text-text hover:bg-primary-coral hover:text-white font-primary"
+                                            className="block px-4 py-2 text-sm text-text hover:bg-background-alt font-primary"
                                         >
                                             Settings
                                         </Link>
                                         <button
                                             onClick={handleLogout}
-                                            className="block w-full text-left px-4 py-2 text-sm text-text hover:bg-primary-coral hover:text-white font-primary"
+                                            className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 font-primary"
                                         >
                                             Logout
                                         </button>
@@ -98,12 +121,20 @@ const Header = () => {
                                 )}
                             </div>
                         ) : (
-                            <Link
-                                href="/auth/login"
-                                className="text-text hover:text-primary-coral px-3 py-2 text-sm font-medium font-primary"
-                            >
-                                Sign in
-                            </Link>
+                            <div className="flex items-center space-x-3">
+                                <Link
+                                    href="/auth/login"
+                                    className="text-text hover:text-primary-coral px-3 py-2 text-sm font-medium font-primary"
+                                >
+                                    Sign in
+                                </Link>
+                                <Link
+                                    href="/auth/register"
+                                    className="bg-primary-coral hover:bg-primary-salmon text-white px-4 py-2 rounded-lg text-sm font-medium font-primary transition-colors"
+                                >
+                                    Sign up
+                                </Link>
+                            </div>
                         )}
                     </div>
 
@@ -135,8 +166,17 @@ const Header = () => {
                                 {item.label}
                             </Link>
                         ))}
-                        {user ? (
+                        {isAuthenticated ? (
                             <>
+                                <div className="px-3 py-2 border-t border-text/10">
+                                    <div className="flex items-center space-x-3 mb-2">
+                                        <UserAvatar username={user?.username} />
+                                        <div>
+                                            <p className="text-sm font-medium text-text">{user?.username}</p>
+                                            <p className="text-xs text-text/60 truncate">{user?.email}</p>
+                                        </div>
+                                    </div>
+                                </div>
                                 <Link
                                     href="/profile"
                                     className="block px-3 py-2 text-base font-medium text-text hover:text-primary-coral hover:bg-background-alt font-primary"
@@ -151,18 +191,26 @@ const Header = () => {
                                 </Link>
                                 <button
                                     onClick={handleLogout}
-                                    className="block w-full text-left px-3 py-2 text-base font-medium text-text hover:text-primary-coral hover:bg-background-alt font-primary"
+                                    className="block w-full text-left px-3 py-2 text-base font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 font-primary"
                                 >
                                     Logout
                                 </button>
                             </>
                         ) : (
-                            <Link
-                                href="/auth/login"
-                                className="block px-3 py-2 text-base font-medium text-text hover:text-primary-coral hover:bg-background-alt font-primary"
-                            >
-                                Sign in
-                            </Link>
+                            <div className="px-3 py-2 space-y-2 border-t border-text/10">
+                                <Link
+                                    href="/auth/login"
+                                    className="block text-text hover:text-primary-coral py-2 text-base font-medium font-primary"
+                                >
+                                    Sign in
+                                </Link>
+                                <Link
+                                    href="/auth/register"
+                                    className="block bg-primary-coral hover:bg-primary-salmon text-white px-4 py-2 rounded-lg text-base font-medium font-primary transition-colors text-center"
+                                >
+                                    Sign up
+                                </Link>
+                            </div>
                         )}
                     </div>
                 )}
