@@ -9,24 +9,31 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [initialized, setInitialized] = useState(false);
 
     useEffect(() => {
         const initAuth = async () => {
             try {
+                setLoading(true);
+                setError(null);
+                
                 // Check if we have a token
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    setLoading(false);
+                    setUser(null);
                     return;
                 }
 
                 await checkAuth();
             } catch (error) {
                 console.error('Auth initialization failed:', error);
+                setError(error.message);
                 // Clear invalid token
                 localStorage.removeItem('token');
+                setUser(null);
             } finally {
                 setLoading(false);
+                setInitialized(true);
             }
         };
 
@@ -35,11 +42,14 @@ export const AuthProvider = ({ children }) => {
 
     const checkAuth = async () => {
         try {
+            setError(null);
             const userData = await AuthService.getCurrentUser();
             setUser(userData);
+            return userData;
         } catch (error) {
             console.error('Auth check failed:', error);
             setUser(null);
+            setError(error.message);
             // Only throw if it's not a "No token" error
             if (!error.message.includes('No authentication token found')) {
                 throw error;
@@ -49,13 +59,20 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (credentials) => {
         try {
+            setLoading(true);
             setError(null);
             const response = await AuthService.login(credentials);
-            setUser(response.user);
+            if (response.user) {
+                setUser(response.user);
+            } else {
+                throw new Error('Invalid login response');
+            }
             return response;
         } catch (error) {
             setError(error.message);
             throw error;
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -110,6 +127,7 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         error,
+        initialized,
         login,
         register,
         logout,
@@ -118,8 +136,11 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user,
     };
 
-    if (loading) {
-        return null; // or a loading spinner
+    // Show loading state only during initial load
+    if (loading && !initialized) {
+        return <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-coral"></div>
+        </div>;
     }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

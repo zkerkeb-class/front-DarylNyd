@@ -1,6 +1,47 @@
 const API_URL = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:5003/auth';
+import testConnections from '@/utils/testConnection';
+
+// Debug helper
+const debug = {
+    log: (message, data) => {
+        console.log(`[Auth Debug] ${message}`, data || '');
+    },
+    error: (message, error) => {
+        console.error(`[Auth Debug] ${message}`, error);
+    }
+};
 
 class AuthService {
+    static async testConnection() {
+        try {
+            debug.log('Testing all service connections...');
+            const results = await testConnections();
+            
+            // Log detailed results
+            debug.log('Connection test results:', {
+                authService: results.authService?.error ? 'Failed' : 'OK',
+                databaseService: results.databaseService?.error ? 'Failed' : 'OK',
+                token: results.token?.exists ? 'Present' : 'Not found'
+            });
+
+            // Check if services are responding
+            const authServiceOk = !results.authService?.error;
+            const databaseServiceOk = !results.databaseService?.error;
+            
+            if (!authServiceOk) {
+                debug.error('Auth Service not available:', results.authService?.error);
+            }
+            if (!databaseServiceOk) {
+                debug.error('Database Service not available:', results.databaseService?.error);
+            }
+
+            return authServiceOk && databaseServiceOk;
+        } catch (error) {
+            debug.error('Connection test failed', error);
+            return false;
+        }
+    }
+
     static async register({ username, email, password, phone }) {
         try {
             const response = await fetch(`${API_URL}/register`, {
@@ -83,38 +124,102 @@ class AuthService {
 
     static async getCurrentUser() {
         try {
+            debug.log('Starting getCurrentUser request');
             const token = localStorage.getItem('token');
             if (!token) {
+                debug.error('No token found in localStorage');
                 throw new Error('No authentication token found');
             }
 
-            const response = await fetch(`${API_URL}/me`, {
+            debug.log('Token found, length:', token.length);
+            
+            // Add timeout to prevent hanging requests
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const requestUrl = `${API_URL}/me`;
+            debug.log('Making request to:', requestUrl);
+            
+            const response = await fetch(requestUrl, {
+                method: 'GET',
                 headers: {
                     'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
                 credentials: 'include',
+                signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+
+            debug.log('Response received', {
+                status: response.status,
+                statusText: response.statusText,
+                headers: Object.fromEntries(response.headers.entries())
             });
 
             if (!response.ok) {
+                // Log the error response for debugging
+                const errorText = await response.text();
+                debug.error('Error response details:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: errorText
+                });
+
                 if (response.status === 401) {
-                    // Token expired or invalid, try to refresh
+                    debug.log('Token expired, attempting refresh');
                     try {
-                        await this.refreshToken();
-                        // Retry the getCurrentUser request
+                        const refreshResult = await this.refreshToken();
+                        if (!refreshResult.token) {
+                            throw new Error('Token refresh failed');
+                        }
+                        debug.log('Token refreshed successfully, retrying request');
                         return await this.getCurrentUser();
                     } catch (refreshError) {
+                        debug.error('Token refresh failed', refreshError);
                         localStorage.removeItem('token');
                         throw new Error('Session expired. Please login again.');
                     }
                 }
-                const error = await response.json().catch(() => ({}));
-                throw new Error(error.message || 'Failed to get current user');
+                
+                if (response.status === 404) {
+                    throw new Error('User not found');
+                }
+                
+                if (response.status === 500) {
+                    debug.error('Server error details:', errorText);
+                    throw new Error('Server error occurred. Please try again later.');
+                }
+
+                try {
+                    const error = JSON.parse(errorText);
+                    throw new Error(error.message || `Failed to get current user (${response.status})`);
+                } catch (parseError) {
+                    throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                }
             }
 
-            return await response.json();
+            const userData = await response.json();
+            debug.log('User data received', { 
+                hasId: !!userData?.id,
+                hasEmail: !!userData?.email,
+                fields: Object.keys(userData)
+            });
+
+            if (!userData || !userData.id) {
+                debug.error('Invalid user data received', userData);
+                throw new Error('Invalid user data received');
+            }
+
+            return userData;
         } catch (error) {
-            console.error('Error getting current user:', error);
+            if (error.name === 'AbortError') {
+                debug.error('Request timed out');
+                throw new Error('Request timed out');
+            }
+            debug.error('Error in getCurrentUser', error);
             throw error;
         }
     }
@@ -192,5 +297,10 @@ class AuthService {
         }
     }
 }
+
+// Test the connection when the service is loaded
+AuthService.testConnection().then(isConnected => {
+    debug.log('Initial connection test result:', isConnected);
+});
 
 export default AuthService; 
