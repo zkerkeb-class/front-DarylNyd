@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:5003/auth';
+const API_URL = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:5002/auth';
 import testConnections from '@/utils/testConnection';
 
 // Debug helper
@@ -298,9 +298,11 @@ class AuthService {
     }
 }
 
-// Test the connection when the service is loaded
-AuthService.testConnection().then(isConnected => {
-    debug.log('Initial connection test result:', isConnected);
-});
+// Test the connection when the service is loaded (only on client side)
+if (typeof window !== 'undefined') {
+    AuthService.testConnection().then(isConnected => {
+        debug.log('Initial connection test result:', isConnected);
+    });
+}
 
 export default AuthService; 

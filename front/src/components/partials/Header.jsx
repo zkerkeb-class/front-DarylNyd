@@ -64,9 +64,9 @@ const Header = () => {
 
     const navigationItems = [
         { label: 'Home', href: '/' },
+        { label: 'Dashboard', href: '/dashboard' },
         { label: 'Artworks', href: '/artworks' },
-        { label: 'Artists', href: '/artists' },
-        { label: 'Advisor', href: '/analyze' },
+        { label: 'AI Advisor', href: '/analyze' },
         { label: 'About', href: '/about' },
     ];
 
@@ -86,7 +86,11 @@ const Header = () => {
 
     // Prevent hydration mismatch
     if (!mounted) {
-        return null;
+        return (
+            <header className="bg-background shadow-md transition-colors duration-200 min-h-[64px] flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-coral"></div>
+            </header>
+        );
     }
 
     return (
@@ -169,13 +173,19 @@ const Header = () => {
                                                 <p className="text-xs text-text/60 truncate">{user?.email}</p>
                                             </div>
                                             <Link
-                                                href="/profile"
+                                                href="/dashboard/profile"
                                                 className="block px-4 py-2 text-sm text-text hover:bg-background-alt font-primary"
                                             >
                                                 Profile
                                             </Link>
                                             <Link
-                                                href="/settings"
+                                                href="/dashboard/subscription"
+                                                className="block px-4 py-2 text-sm text-text hover:bg-background-alt font-primary"
+                                            >
+                                                Subscription
+                                            </Link>
+                                            <Link
+                                                href="/dashboard/settings"
                                                 className="block px-4 py-2 text-sm text-text hover:bg-background-alt font-primary"
                                             >
                                                 Settings
@@ -270,13 +280,19 @@ const Header = () => {
                                     </div>
                                 </div>
                                 <Link
-                                    href="/profile"
+                                    href="/dashboard/profile"
                                     className="block px-3 py-2 text-base font-medium text-text hover:text-primary-coral hover:bg-background-alt font-primary"
                                 >
                                     Profile
                                 </Link>
                                 <Link
-                                    href="/settings"
+                                    href="/dashboard/subscription"
+                                    className="block px-3 py-2 text-base font-medium text-text hover:text-primary-coral hover:bg-background-alt font-primary"
+                                >
+                                    Subscription
+                                </Link>
+                                <Link
+                                    href="/dashboard/settings"
                                     className="block px-3 py-2 text-base font-medium text-text hover:text-primary-coral hover:bg-background-alt font-primary"
                                 >
                                     Settings

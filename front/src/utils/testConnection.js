@@ -47,18 +47,23 @@ const testConnections = async () => {
             };
         }
 
-        // Check token if exists
-        const token = localStorage.getItem('token');
-        if (token) {
-            results.token = {
-                exists: true,
-                length: token.length,
-                format: token.split('.').length === 3 ? 'valid JWT format' : 'invalid format'
-            };
-            console.log('Token found:', results.token);
+        // Check token if exists (only on client side)
+        if (typeof window !== 'undefined' && window.localStorage) {
+            const token = localStorage.getItem('token');
+            if (token) {
+                results.token = {
+                    exists: true,
+                    length: token.length,
+                    format: token.split('.').length === 3 ? 'valid JWT format' : 'invalid format'
+                };
+                console.log('Token found:', results.token);
+            } else {
+                results.token = { exists: false };
+                console.log('No token found in localStorage');
+            }
         } else {
-            results.token = { exists: false };
-            console.log('No token found in localStorage');
+            results.token = { exists: false, reason: 'localStorage not available' };
+            console.log('localStorage not available (SSR)');
         }
 
         return results;

@@ -28,9 +28,18 @@ export const AuthProvider = ({ children }) => {
             } catch (error) {
                 console.error('Auth initialization failed:', error);
                 setError(error.message);
-                // Clear invalid token
-                localStorage.removeItem('token');
-                setUser(null);
+                
+                // Only clear token for authentication-specific errors
+                const shouldClearToken = error.message.includes('Session expired') || 
+                                       error.message.includes('Token expired') ||
+                                       error.message.includes('Invalid token') ||
+                                       error.message.includes('Unauthorized') ||
+                                       error.message.includes('Forbidden');
+                
+                if (shouldClearToken) {
+                    localStorage.removeItem('token');
+                    setUser(null);
+                }
             } finally {
                 setLoading(false);
                 setInitialized(true);
@@ -42,14 +51,29 @@ export const AuthProvider = ({ children }) => {
 
     const checkAuth = async () => {
         try {
+            console.log('OK');
             setError(null);
             const userData = await AuthService.getCurrentUser();
             setUser(userData);
             return userData;
         } catch (error) {
             console.error('Auth check failed:', error);
-            setUser(null);
+            
+            // Only clear user state for authentication-specific errors
+            const isAuthError = error.message.includes('Session expired') || 
+                              error.message.includes('Token expired') ||
+                              error.message.includes('Invalid token') ||
+                              error.message.includes('Unauthorized') ||
+                              error.message.includes('Forbidden') ||
+                              error.message.includes('No authentication token found');
+            
+            if (isAuthError) {
+                setUser(null);
+                localStorage.removeItem('token');
+            }
+            
             setError(error.message);
+            
             // Only throw if it's not a "No token" error
             if (!error.message.includes('No authentication token found')) {
                 throw error;
@@ -123,12 +147,35 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const loginWithToken = async (token) => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            // Store the token
+            localStorage.setItem('token', token);
+            
+            // Get user data with the token
+            const userData = await AuthService.getCurrentUser();
+            setUser(userData);
+            
+            return userData;
+        } catch (error) {
+            setError(error.message);
+            localStorage.removeItem('token');
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const value = {
         user,
         loading,
         error,
         initialized,
         login,
+        loginWithToken,
         register,
         logout,
         forgotPassword,
