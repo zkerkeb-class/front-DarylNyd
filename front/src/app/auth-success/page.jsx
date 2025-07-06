@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Image from 'next/image';
@@ -12,9 +12,17 @@ export default function AuthSuccessPage() {
     const { loginWithToken } = useAuth();
     const { isDarkMode } = useTheme();
     const [status, setStatus] = useState('processing');
+    const processingRef = useRef(false);
 
     useEffect(() => {
         const handleAuthSuccess = async () => {
+            // Prevent multiple calls
+            if (processingRef.current) {
+                return;
+            }
+
+            processingRef.current = true;
+
             try {
                 const token = searchParams.get('token');
                 const error = searchParams.get('error');
@@ -46,6 +54,8 @@ export default function AuthSuccessPage() {
                 console.error('Error processing OAuth callback:', error);
                 // Redirect to login with error message
                 router.push(`/auth/login?error=${encodeURIComponent('Failed to complete authentication. Please try again.')}`);
+            } finally {
+                processingRef.current = false;
             }
         };
 

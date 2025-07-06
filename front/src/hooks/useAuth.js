@@ -155,14 +155,19 @@ export const AuthProvider = ({ children }) => {
             // Store the token
             localStorage.setItem('token', token);
             
+            // Add a small delay to prevent rapid successive calls
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             // Get user data with the token
             const userData = await AuthService.getCurrentUser();
             setUser(userData);
             
             return userData;
         } catch (error) {
+            console.error('Login with token failed:', error);
             setError(error.message);
             localStorage.removeItem('token');
+            setUser(null);
             throw error;
         } finally {
             setLoading(false);

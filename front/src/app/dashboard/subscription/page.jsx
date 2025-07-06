@@ -1,15 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import useSubscription from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { FaCrown, FaRocket, FaStar, FaCheck, FaTimes, FaCreditCard, FaHistory, FaChartBar } from 'react-icons/fa';
+import React from 'react';
 
 export default function SubscriptionManagementPage() {
+    // All hooks at the top!
     const { user, isAuthenticated } = useAuth();
     const {
         subscription,
+        plans,
         usage,
         loading,
         error,
@@ -21,12 +24,57 @@ export default function SubscriptionManagementPage() {
         isActive,
         isExpired,
         isCanceled,
-        createSubscription
+        createSubscription,
+        fetchCurrentSubscription
     } = useSubscription();
     const router = useRouter();
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [updating, setUpdating] = useState(false);
+    const [selectedPlan, setSelectedPlan] = useState(null);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
+    const currentPlan = getPlanDetails();
+    const remainingRequests = getRemainingRequests();
+    const totalRequests = getTotalRequests();
+    const usedRequests = totalRequests - remainingRequests;
+    const usagePercentage = totalRequests > 0 ? (usedRequests / totalRequests) * 100 : 0;
+    // Map backend plans to UI plans with icons/colors/limitations
+    const uiPlans = useMemo(() => (plans || []).map(plan => {
+        let icon = FaStar, color = 'bg-gray-100 text-gray-600', limitations = [];
+        if (plan.name && plan.name.toLowerCase().includes('pro') && !plan.name.toLowerCase().includes('super')) {
+            icon = FaRocket;
+            color = 'bg-primary-coral text-white';
+            limitations = ['No unlimited requests', 'No dedicated account manager'];
+        } else if (plan.name && plan.name.toLowerCase().includes('super')) {
+            icon = FaCrown;
+            color = 'bg-gradient-to-r from-purple-500 to-pink-500 text-white';
+            limitations = ['No unlimited requests (yet)'];
+        } else {
+            limitations = ['No advanced analytics', 'No priority support', 'Limited monthly requests'];
+        }
+        return {
+            ...plan,
+            id: plan._id || plan.id || (plan.name ? plan.name.toLowerCase() : 'unknown'),
+            price: plan.price === 0 ? '€0' : `€${plan.price}`,
+            period: 'month',
+            icon,
+            color,
+            limitations,
+            features: plan.features || []
+        };
+    }), [plans]);
 
+    useEffect(() => {
+        // Refetch subscription if redirected from Stripe
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('success') || params.has('canceled')) {
+                fetchCurrentSubscription();
+            }
+        }
+    }, [fetchCurrentSubscription]);
+
+    // Only return after all hooks are called
     if (!isAuthenticated) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
@@ -42,80 +90,6 @@ export default function SubscriptionManagementPage() {
             </div>
         );
     }
-
-    const currentPlan = getPlanDetails();
-    const remainingRequests = getRemainingRequests();
-    const totalRequests = getTotalRequests();
-    const usedRequests = totalRequests - remainingRequests;
-    const usagePercentage = totalRequests > 0 ? (usedRequests / totalRequests) * 100 : 0;
-
-    const plans = [
-        {
-            id: 'free',
-            name: 'Free',
-            price: '€0',
-            requests: 5,
-            period: 'month',
-            icon: FaStar,
-            color: 'bg-gray-100 text-gray-600',
-            description: 'Perfect for getting started with basic AI art analyses.',
-            features: [
-                '5 AI art analyses per month',
-                'Basic support',
-                'Access to community forum'
-            ],
-            limitations: [
-                'No advanced analytics',
-                'No priority support',
-                'Limited monthly requests'
-            ]
-        },
-        {
-            id: 'pro',
-            name: 'Pro',
-            price: '€20',
-            requests: 20,
-            period: 'month',
-            icon: FaRocket,
-            color: 'bg-primary-coral text-white',
-            description: 'For regular users who want more analyses and features.',
-            features: [
-                '20 AI art analyses per month',
-                'Priority support',
-                'Advanced analytics',
-                'Downloadable reports'
-            ],
-            limitations: [
-                'No unlimited requests',
-                'No dedicated account manager'
-            ]
-        },
-        {
-            id: 'super-pro',
-            name: 'Super Pro',
-            price: '€40',
-            requests: 55,
-            period: 'month',
-            icon: FaCrown,
-            color: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white',
-            description: 'Best for professionals and teams needing high volume and premium features.',
-            features: [
-                '55 AI art analyses per month',
-                'Premium support',
-                'All analytics & reports',
-                'Early access to new features',
-                'Dedicated account manager'
-            ],
-            limitations: [
-                'No unlimited requests (yet)'
-            ]
-        }
-    ];
-
-    // Modal state for payment method selection
-    const [selectedPlan, setSelectedPlan] = useState(null);
-    const [showPaymentModal, setShowPaymentModal] = useState(false);
-    const [errorMsg, setErrorMsg] = useState("");
 
     // Subscribe/Upgrade logic
     const handleSubscribe = async (plan) => {
@@ -217,7 +191,7 @@ export default function SubscriptionManagementPage() {
                                 <div className="space-y-4">
                                     <div className="flex items-center space-x-3">
                                         <div className={`w-12 h-12 rounded-full flex items-center justify-center ${currentPlan.icon === FaStar ? 'bg-gray-100 text-gray-600' : currentPlan.icon === FaRocket ? 'bg-primary-coral text-white' : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'}`}>
-                                            <currentPlan.icon className="text-xl" />
+                                            {(currentPlan.icon || FaStar) && React.createElement(currentPlan.icon || FaStar, { className: "text-xl" })}
                                         </div>
                                         <div>
                                             <h3 className="text-lg font-semibold text-text">{currentPlan.name}</h3>
@@ -282,61 +256,15 @@ export default function SubscriptionManagementPage() {
                     </div>
                 )}
 
-                {/* Available Plans */}
-                <div className="mb-8">
-                    <h2 className="text-2xl font-bold text-text mb-6">Available Plans</h2>
-                    <div className="grid md:grid-cols-3 gap-6">
-                        {plans.map((plan) => (
-                            <div
-                                key={plan.id}
-                                className={`relative rounded-xl p-6 transition-all duration-300 ${subscription?.plan === plan.id
-                                    ? 'ring-2 ring-primary-coral bg-background-alt'
-                                    : 'bg-background-alt hover:shadow-lg'
-                                    }`}
-                            >
-                                {subscription?.plan === plan.id && (
-                                    <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
-                                        <span className="bg-primary-coral text-white px-3 py-1 rounded-full text-xs font-medium">
-                                            Current Plan
-                                        </span>
-                                    </div>
-                                )}
-
-                                <div className="text-center mb-6">
-                                    <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${plan.color}`}>
-                                        <plan.icon className="text-2xl" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold text-text mb-2">{plan.name}</h3>
-                                    <div className="mb-2">
-                                        <span className="text-3xl font-bold text-text">{plan.price}</span>
-                                        <span className="text-text/60">/month</span>
-                                    </div>
-                                    <p className="text-text/70 text-sm mb-2">{plan.description}</p>
-                                    <ul className="text-left mb-2">
-                                        {plan.features.map((feature, idx) => (
-                                            <li key={idx} className="flex items-center text-green-700 text-sm mb-1"><FaCheck className="mr-2" />{feature}</li>
-                                        ))}
-                                    </ul>
-                                    <ul className="text-left">
-                                        {plan.limitations.map((lim, idx) => (
-                                            <li key={idx} className="flex items-center text-red-500 text-xs mb-1"><FaTimes className="mr-2" />{lim}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                <button
-                                    onClick={() => handleSubscribe(plan)}
-                                    disabled={subscription?.plan === plan.id || updating}
-                                    className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${subscription?.plan === plan.id
-                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                        : 'bg-primary-coral hover:bg-primary-salmon text-white'
-                                        }`}
-                                >
-                                    {updating ? 'Processing...' : subscription?.plan === plan.id ? 'Current Plan' : 'Subscribe'}
-                                </button>
-                            </div>
-                        ))}
-                    </div>
+                {/* Available Plans Button */}
+                <div className="mb-8 flex justify-center w-full">
+                    <button
+                        className="px-6 py-3 rounded-lg bg-primary-coral text-white font-semibold hover:bg-primary-salmon transition-colors shadow text-lg"
+                        style={{ minWidth: 280 }}
+                        onClick={() => router.push('/dashboard/plans')}
+                    >
+                        See Available Plans
+                    </button>
                 </div>
 
                 {/* Subscription Actions */}

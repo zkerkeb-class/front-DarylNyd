@@ -38,6 +38,12 @@ const Input = React.forwardRef(({
                         className
                     )}
                     ref={ref}
+                    autoComplete={
+                        type === 'email' ? 'email' :
+                            (type === 'password' && (props.name === 'password' || props.name === 'currentPassword')) ? 'current-password' :
+                                (type === 'password' && (props.name === 'newPassword' || props.name === 'confirmPassword')) ? 'new-password' :
+                                    (props.name === 'username' ? 'username' : undefined)
+                    }
                     {...props}
                 />
                 {isPassword && (

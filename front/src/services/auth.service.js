@@ -1,4 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:5002/auth';
+import dotenv from 'dotenv';
+dotenv.config();
+const API_URL = 'http://localhost:5002/auth';
 import testConnections from '@/utils/testConnection';
 
 // Debug helper
@@ -84,9 +86,10 @@ class AuthService {
             }
 
             const data = await response.json();
-            // Store the token in localStorage for persistence
+            // Store the token in localStorage and sessionStorage for persistence
             if (data.token) {
                 localStorage.setItem('token', data.token);
+                sessionStorage.setItem('token', data.token);
             }
             return data;
         } catch (error) {
@@ -135,7 +138,7 @@ class AuthService {
             
             // Add timeout to prevent hanging requests
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased timeout to 10 seconds
 
             const requestUrl = `${API_URL}/me`;
             debug.log('Making request to:', requestUrl);
@@ -186,6 +189,11 @@ class AuthService {
                 
                 if (response.status === 404) {
                     throw new Error('User not found');
+                }
+                
+                if (response.status === 429) {
+                    debug.error('Rate limit exceeded');
+                    throw new Error('Too many requests. Please wait a moment and try again.');
                 }
                 
                 if (response.status === 500) {

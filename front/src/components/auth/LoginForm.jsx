@@ -56,7 +56,6 @@ const LoginForm = () => {
     };
 
     const handleGoogleSignIn = () => {
-        // Redirect to Google OAuth endpoint
         const authServiceUrl = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:5002';
         window.location.href = `${authServiceUrl}/auth/google`;
     };
@@ -137,7 +136,7 @@ const LoginForm = () => {
                         </label>
                     </div>
                     <Link
-                        href="/forgot-password"
+                        href="/auth/forgot-password"
                         className="text-sm text-text hover:text-primary-coral transition-colors"
                     >
                         Forgot password?
