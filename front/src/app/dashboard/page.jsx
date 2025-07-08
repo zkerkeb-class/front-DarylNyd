@@ -15,6 +15,7 @@ import {
     FaRocket,
     FaCrown
 } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
 
 export default function DashboardPage() {
     const { user } = useAuth();
@@ -86,6 +87,23 @@ export default function DashboardPage() {
         if (percentage > 60) return 'bg-yellow-500';
         return 'bg-green-500';
     };
+
+    // Prometheus metrics state
+    const [promMetrics, setPromMetrics] = useState('');
+    const [metricsLoading, setMetricsLoading] = useState(false);
+    const [metricsError, setMetricsError] = useState(null);
+
+    useEffect(() => {
+        setMetricsLoading(true);
+        fetch('http://localhost:5005/metrics')
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to fetch metrics');
+                return res.text();
+            })
+            .then(setPromMetrics)
+            .catch(err => setMetricsError(err.message))
+            .finally(() => setMetricsLoading(false));
+    }, []);
 
     // Show loading state
     if (loading && !subscription) {
@@ -243,6 +261,18 @@ export default function DashboardPage() {
                     actionText="Upgrade Now"
                 />
             )}
+
+            {/* Prometheus Raw Metrics Section */}
+            <div className="mt-12">
+                <h2 className="text-2xl font-bold mb-4">Raw Prometheus Metrics</h2>
+                {metricsLoading && <div>Loading metrics...</div>}
+                {metricsError && <div className="text-red-600">Error: {metricsError}</div>}
+                {!metricsLoading && !metricsError && (
+                    <pre className="bg-gray-900 text-green-200 rounded-lg p-4 overflow-x-auto max-h-96 text-xs">
+                        {promMetrics}
+                    </pre>
+                )}
+            </div>
         </div>
     );
 } 
