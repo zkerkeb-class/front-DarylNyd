@@ -22,6 +22,7 @@ const AuthLayout = ({ children }) => {
                             src="/Auth/auth_bg.png"
                             alt="Abstract art"
                             fill
+                            sizes="(min-width: 768px) 50vw, 100vw"
                             style={{ objectFit: 'cover' }}
                             priority
                             className="rounded-r-3xl"

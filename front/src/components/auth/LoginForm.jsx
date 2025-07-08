@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FcGoogle } from 'react-icons/fc';
@@ -13,10 +13,20 @@ import { useTheme } from '@/context/ThemeContext';
 
 const LoginForm = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { login } = useAuth();
     const { isDarkMode } = useTheme();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // Check for error messages from URL parameters (OAuth errors)
+    useEffect(() => {
+        const errorParam = searchParams.get('error');
+        if (errorParam) {
+            setError(decodeURIComponent(errorParam));
+        }
+    }, [searchParams]);
+
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -46,7 +56,8 @@ const LoginForm = () => {
     };
 
     const handleGoogleSignIn = () => {
-        // Implement Google sign-in
+        const authServiceUrl = process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:5002';
+        window.location.href = `${authServiceUrl}/auth/google`;
     };
 
     return (
@@ -125,7 +136,7 @@ const LoginForm = () => {
                         </label>
                     </div>
                     <Link
-                        href="/forgot-password"
+                        href="/auth/forgot-password"
                         className="text-sm text-text hover:text-primary-coral transition-colors"
                     >
                         Forgot password?
